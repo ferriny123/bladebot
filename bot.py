@@ -25,6 +25,12 @@ def load(path, default):
 
 
 config = load(CFG, {"token": "PASTE_YOUR_BOT_TOKEN_HERE"})
+
+# Railway uses the DISCORD_TOKEN environment variable.
+# Local runs can still use config.json as a fallback.
+token = os.getenv("DISCORD_TOKEN", "").strip()
+if not token:
+    token = str(config.get("token", "")).strip()
 data = load(DATA, {
     "channel_id": None,
     "role_id": None,
@@ -128,7 +134,6 @@ class HiveBot(discord.Client):
             self.timer_task = asyncio.create_task(self.timer_loop())
 
     async def register_commands(self):
-        token = config.get("token", "").strip()
         headers = {"Authorization": f"Bot {token}", "Content-Type": "application/json"}
         async with aiohttp.ClientSession(headers=headers) as session:
             # Remove stale global commands created by previous versions.
@@ -329,8 +334,8 @@ class HiveBot(discord.Client):
 
 
 bot = HiveBot()
-token = config.get("token", "").strip()
+
 if not token or token == "PASTE_YOUR_BOT_TOKEN_HERE":
-    print("Open config.json and paste your Discord bot token.")
+    print("No Discord bot token found. Set DISCORD_TOKEN in Railway Variables or paste it into config.json for local use.")
 else:
     bot.run(token)
